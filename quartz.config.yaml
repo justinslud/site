@@ -5,7 +5,7 @@ configuration:
   enablePopovers: true
   analytics: null
   locale: en-US
-  baseUrl: localhost:8080
+  baseUrl: justinslud.github.io/site
   ignorePatterns:
   - private
   - templates
