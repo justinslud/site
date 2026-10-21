@@ -10,36 +10,18 @@
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
 
-  <header class="masthead">
+  <header class="masthead masthead-compact">
     <div class="topline">
       <span class="wordmark">Loaded Words</span>
+      <div class="hero-stats" id="heroStats" aria-live="polite">
+        <span>1,900 words</span>
+        <span>8 contexts</span>
+        <span>1,500 loaded</span>
+      </div>
       <nav class="toplinks" aria-label="Project links">
         <a href="/">Justin Slud</a>
-        <a href="/notes/loaded-words">About this project</a>
+        <a href="/notes/loaded-words">Blog post</a>
       </nav>
-    </div>
-
-    <div class="hero">
-      <div class="hero-copy">
-        <p class="eyebrow">A dictionary of double lives</p>
-        <h1>Loaded <em>Words</em></h1>
-        <p class="lede">A word can walk into a math department, a kitchen, a barracks, a server room, and a bedroom and come out meaning something different each time. Paste a paragraph. See which words are carrying extra luggage.</p>
-        <div class="hero-stats" id="heroStats" aria-live="polite">
-          <span>1,900 words</span>
-          <span>8 contexts</span>
-          <span>1,500 loaded</span>
-        </div>
-      </div>
-
-      <aside class="hero-aside">
-        <p class="aside-kicker">How to read it</p>
-        <p>Highlighted words have at least two visible senses. Hover a word for its cards; tap it on a phone. The dictionary and the overlap view are in the tabs below.</p>
-        <label class="switch">
-          <input type="checkbox" id="showRisque">
-          <span class="switch-track" aria-hidden="true"><span class="switch-knob"></span></span>
-          <span class="switch-label">Show risqué senses <small>18+ · off by default</small></span>
-        </label>
-      </aside>
     </div>
   </header>
 
@@ -54,39 +36,43 @@
       <div class="text-layout">
         <section class="panel input-panel">
           <div class="panel-head">
-            <div>
-              <p class="eyebrow">Paste or write</p>
-              <h2>Put a text under the lamp</h2>
-            </div>
+            <h2>Paste a paragraph</h2>
             <span class="counter" id="charCount">0 chars</span>
+          </div>
+          <div class="examples-row">
+            <span class="examples-label">Examples</span>
+            <div class="sample-row" id="sampleRow" aria-label="Sample texts"></div>
           </div>
           <label class="sr-only" for="textInput">Text to search for loaded words</label>
           <textarea id="textInput" spellcheck="false" placeholder="Paste an article, a paragraph, a poem, or a bad excuse…"></textarea>
-          <div class="sample-row" id="sampleRow" aria-label="Sample texts"></div>
           <div class="actions">
             <button class="button quiet" id="clearText" type="button">Clear</button>
-            <button class="button" id="highlightButton" type="button">Highlight</button>
           </div>
-          <p class="small-note">Exact words, simple plurals, and common verb forms are matched. Phrases such as “black hole” are matched as a unit.</p>
+          <p class="small-note">Exact words, simple plurals, common verb forms, and phrases such as “black hole” are matched as a unit.</p>
         </section>
 
-        <section class="panel output-panel">
+        <section class="panel highlight-panel">
           <div class="panel-head">
-            <div>
-              <p class="eyebrow">Result</p>
-              <h2>Words with extra luggage</h2>
-            </div>
+            <h2>Highlighted text</h2>
             <span class="counter" id="textStats">—</span>
           </div>
           <div class="prose-output" id="highlighted" aria-live="polite"></div>
-          <div class="hits-head">
-            <span>Ranked by hits</span>
-            <span id="hitCount">—</span>
+        </section>
+
+        <section class="panel hits-panel">
+          <div class="panel-head">
+            <h2>Ranked by hits</h2>
+            <span class="counter" id="hitCount">—</span>
           </div>
+          <label class="switch hits-switch">
+            <input type="checkbox" id="showRisque" aria-label="Show risqué senses (18+)">
+            <span class="switch-track" aria-hidden="true"><span class="switch-knob"></span></span>
+            <span class="switch-label">Risqué <small>18+ · off</small></span>
+          </label>
           <div class="hit-list" id="hitList"></div>
         </section>
       </div>
-      <p class="small-note page-note">Risqué senses are hidden unless you turn them on. The counts in the dictionary include all senses; the highlighter only marks words with two or more visible contexts.</p>
+      <p class="small-note page-note">Risqué senses are hidden unless you turn them on. The highlighter marks words with two or more visible contexts.</p>
     </section>
 
     <section class="view" id="view-dictionary" hidden>
@@ -173,7 +159,6 @@
       <p><strong>Loaded Words</strong> is a small, framework-free dictionary of polysemy. Glosses come from <a href="https://en-word.net/">Open English WordNet 2024</a> (CC BY 4.0); slang and specialist senses marked <span class="source-tag">LW</span> were written for this project. The data is available under CC BY 4.0.</p>
     </div>
     <div class="footer-links">
-      <a href="/notes/loaded-words">Project note</a>
       <a href="/">justinslud.com</a>
     </div>
   </footer>

@@ -638,8 +638,7 @@
           b.contexts - a.contexts ||
           b.entry.f - a.entry.f ||
           a.entry.w.localeCompare(b.entry.w)
-      )
-      .slice(0, 24);
+      );
     hitList.innerHTML = ranked
       .map(
         ({ entry, count }) => `
@@ -1042,7 +1041,6 @@
       clearTimeout(textTimer);
       textTimer = setTimeout(renderText, 90);
     });
-    $("#highlightButton").addEventListener("click", renderText);
     $("#clearText").addEventListener("click", () => {
       textInput.value = "";
       renderText();
