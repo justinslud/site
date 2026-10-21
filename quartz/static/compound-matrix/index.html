@@ -41,6 +41,7 @@
 
   h1 {
     margin: 0 0 4px;
+    color: #000;
     font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
     font-size: 34px;
     font-weight: 500;
@@ -199,13 +200,20 @@
 
   .stat strong { color: var(--ink); font-weight: 650; }
 
+  .search-box {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--tile);
+    padding: 9px 11px 10px;
+  }
+
   #search {
     width: 100%;
     border: 0;
     border-bottom: 1px solid var(--line);
     background: transparent;
     color: var(--ink);
-    padding: 7px 0 9px;
+    padding: 3px 0 7px;
     font: inherit;
     font-size: 16px;
     outline: none;
@@ -257,11 +265,13 @@
     display: flex;
     align-items: center;
     gap: 7px;
-    margin-top: 14px;
+    margin-top: 10px;
     color: var(--muted);
     font-size: 12px;
     cursor: pointer;
   }
+
+  .check input { flex: none; }
 
   .check input { accent-color: var(--accent); }
 
@@ -750,10 +760,12 @@
         <label class="eyebrow" for="search">Search</label>
         <button class="reset" id="reset">Reset</button>
       </div>
-      <input id="search" type="text" placeholder="face*  *base  4  4+5" autocomplete="off" spellcheck="false">
-      <div class="hint"><code>*</code> any · <code>?</code> one letter · <code>4</code> any part · <code>4+5</code> shape</div>
+      <div class="search-box">
+        <input id="search" type="text" placeholder="face*  *base  4  4+5" autocomplete="off" spellcheck="false">
+        <div class="hint"><code>*</code> any · <code>?</code> one letter · <code>4</code> any part · <code>4+5</code> shape</div>
+        <label class="check"><input type="checkbox" id="compounds" checked> Compounds only</label>
+      </div>
       <div class="chips" id="chips"></div>
-      <label class="check"><input type="checkbox" id="compounds" checked> Compounds only</label>
     </section>
 
     <section class="panel">
@@ -792,13 +804,13 @@
   <strong>Build 6</strong> · Demo: <span id="footerCount"></span> names. Generated wordmarks, not real logos. Years approximate.
 </footer>
 
-<script src="brands.js"></script>
+<script src="brands.js?v=7"></script>
 <script>
-  const DATA = window.BRANDS;
+  const DATA = Array.isArray(window.BRANDS) ? window.BRANDS : [];
   const CATS = ["Tech", "Consumer", "Finance", "Health", "Media"];
   const SIZES = [2, 3, 4, 5, 6, 7, 8, 9];
-  const YEAR_MIN = Math.min(...DATA.map((b) => b.year));
-  const YEAR_MAX = Math.max(...DATA.map((b) => b.year));
+  const YEAR_MIN = DATA.length ? Math.min(...DATA.map((b) => b.year)) : 0;
+  const YEAR_MAX = DATA.length ? Math.max(...DATA.map((b) => b.year)) : 0;
   const CAT_COLORS = {
     Tech: "#3b5bdb",
     Consumer: "#c05621",
@@ -1055,6 +1067,12 @@
   }
 
   function renderGrid() {
+    if (!DATA.length) {
+      countEl.innerHTML = `<strong>0</strong> shown · data not loaded`;
+      gridEl.innerHTML = `<div class="empty">The name data did not load. Hard-refresh the page (Ctrl/Cmd+Shift+R).</div>`;
+      return;
+    }
+
     const arr = visible();
     const total = baseFiltered().length;
     countEl.innerHTML = `<strong>${arr.length}</strong> shown · ${total} in set`;

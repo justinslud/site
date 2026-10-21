@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Loaded Words</title>
+  <meta name="description" content="A small dictionary of words that mean different things in different rooms: math, science, computing, the military, the kitchen, music, and the bedroom.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="masthead">
+    <div class="topline">
+      <span class="wordmark">Loaded Words</span>
+      <nav class="toplinks" aria-label="Project links">
+        <a href="/">Justin Slud</a>
+        <a href="/notes/loaded-words/">About this project</a>
+      </nav>
+    </div>
+
+    <div class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">A dictionary of double lives</p>
+        <h1>Loaded <em>Words</em></h1>
+        <p class="lede">A word can walk into a math department, a kitchen, a barracks, a server room, and a bedroom and come out meaning something different each time. Paste a paragraph. See which words are carrying extra luggage.</p>
+        <div class="hero-stats" id="heroStats" aria-live="polite">
+          <span>1,900 words</span>
+          <span>8 contexts</span>
+          <span>1,500 loaded</span>
+        </div>
+      </div>
+
+      <aside class="hero-aside">
+        <p class="aside-kicker">How to read it</p>
+        <p>Highlighted words have at least two visible senses. Hover a word for its cards; tap it on a phone. The dictionary and the overlap view are in the tabs below.</p>
+        <label class="switch">
+          <input type="checkbox" id="showRisque">
+          <span class="switch-track" aria-hidden="true"><span class="switch-knob"></span></span>
+          <span class="switch-label">Show risqué senses <small>18+ · off by default</small></span>
+        </label>
+      </aside>
+    </div>
+  </header>
+
+  <nav class="tabs" aria-label="Loaded Words views">
+    <button class="tab is-active" data-view="text" aria-selected="true">Your text</button>
+    <button class="tab" data-view="dictionary" aria-selected="false">Dictionary</button>
+    <button class="tab" data-view="overlaps" aria-selected="false">Overlaps</button>
+  </nav>
+
+  <main id="main">
+    <section class="view" id="view-text">
+      <div class="text-layout">
+        <section class="panel input-panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Paste or write</p>
+              <h2>Put a text under the lamp</h2>
+            </div>
+            <span class="counter" id="charCount">0 chars</span>
+          </div>
+          <label class="sr-only" for="textInput">Text to search for loaded words</label>
+          <textarea id="textInput" spellcheck="false" placeholder="Paste an article, a paragraph, a poem, or a bad excuse…"></textarea>
+          <div class="sample-row" id="sampleRow" aria-label="Sample texts"></div>
+          <div class="actions">
+            <button class="button quiet" id="clearText" type="button">Clear</button>
+            <button class="button" id="highlightButton" type="button">Highlight</button>
+          </div>
+          <p class="small-note">Exact words, simple plurals, and common verb forms are matched. Phrases such as “black hole” are matched as a unit.</p>
+        </section>
+
+        <section class="panel output-panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Result</p>
+              <h2>Words with extra luggage</h2>
+            </div>
+            <span class="counter" id="textStats">—</span>
+          </div>
+          <div class="prose-output" id="highlighted" aria-live="polite"></div>
+          <div class="hits-head">
+            <span>Ranked by hits</span>
+            <span id="hitCount">—</span>
+          </div>
+          <div class="hit-list" id="hitList"></div>
+        </section>
+      </div>
+      <p class="small-note page-note">Risqué senses are hidden unless you turn them on. The counts in the dictionary include all senses; the highlighter only marks words with two or more visible contexts.</p>
+    </section>
+
+    <section class="view" id="view-dictionary" hidden>
+      <div class="view-head">
+        <div>
+          <p class="eyebrow">Dictionary</p>
+          <h2>Browse the double lives</h2>
+          <p class="view-lede">Search by word, filter by context, or start from the words with the most overlap.</p>
+        </div>
+        <button class="button quiet" id="resetFilters" type="button">Reset filters</button>
+      </div>
+
+      <div class="toolbar">
+        <label class="search-wrap">
+          <span class="sr-only">Search the dictionary</span>
+          <input id="dictSearch" type="search" placeholder="Search a word…" autocomplete="off" spellcheck="false">
+        </label>
+        <label class="check">
+          <input type="checkbox" id="loadedOnly" checked>
+          <span>2+ visible contexts</span>
+        </label>
+      </div>
+
+      <div class="chip-row" id="contextFilters" aria-label="Filter by context"></div>
+      <div class="fuzzy" id="fuzzyBox" hidden></div>
+
+      <div class="summary-grid" id="summaryGrid"></div>
+
+      <div class="list-head">
+        <span id="dictCount">—</span>
+        <label class="sort-label">Sort
+          <select id="dictSort">
+            <option value="contexts">Most contexts</option>
+            <option value="freq">Most common</option>
+            <option value="az">A–Z</option>
+          </select>
+        </label>
+      </div>
+      <div class="word-list" id="dictList"></div>
+      <button class="button quiet load-more" id="loadMore" type="button" hidden>Load more</button>
+    </section>
+
+    <section class="view" id="view-overlaps" hidden>
+      <div class="view-head">
+        <div>
+          <p class="eyebrow">Overlaps</p>
+          <h2>Where the meanings pile up</h2>
+          <p class="view-lede">The interesting words are rarely in one room only. These are the contexts that share the most vocabulary.</p>
+        </div>
+      </div>
+
+      <div class="overlap-grid">
+        <section class="panel">
+          <div class="panel-head compact">
+            <h3>Context totals</h3>
+            <span class="counter">visible senses</span>
+          </div>
+          <div class="context-totals" id="contextTotals"></div>
+        </section>
+        <section class="panel">
+          <div class="panel-head compact">
+            <h3>Most loaded</h3>
+            <span class="counter">contexts · commonness</span>
+          </div>
+          <div class="most-loaded" id="mostLoaded"></div>
+        </section>
+      </div>
+
+      <section class="panel overlap-panel">
+        <div class="panel-head compact">
+          <div>
+            <h3>Top overlaps</h3>
+            <p class="small-note">Words that carry every context in a combination. Click a bar to see its words.</p>
+          </div>
+          <span class="counter">2–4 contexts</span>
+        </div>
+        <div class="overlap-bars" id="overlapBars"></div>
+      </section>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div>
+      <p><strong>Loaded Words</strong> is a small, framework-free dictionary of polysemy. Glosses come from <a href="https://en-word.net/">Open English WordNet 2024</a> (CC BY 4.0); slang and specialist senses marked <span class="source-tag">LW</span> were written for this project. The data is available under CC BY 4.0.</p>
+    </div>
+    <div class="footer-links">
+      <a href="/notes/loaded-words/">Project note</a>
+      <a href="/">justinslud.com</a>
+    </div>
+  </footer>
+
+  <div class="backdrop" id="cardBackdrop" hidden></div>
+  <aside class="word-card" id="wordCard" hidden aria-live="polite" aria-label="Word details"></aside>
+
+  <script src="contexts.js"></script>
+  <script src="words.js"></script>
+  <script src="samples.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
