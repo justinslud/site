@@ -1,0 +1,1225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Compound Matrix</title>
+<style>
+  :root {
+    --bg: #f3f0e8;
+    --panel: #fbf9f3;
+    --tile: #fffdf8;
+    --ink: #17150f;
+    --muted: #6f6a5e;
+    --line: #ddd7c8;
+    --accent: #0f766e;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    margin: 0;
+    padding: 32px 24px 64px;
+    max-width: 1440px;
+    margin-inline: auto;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  header.top {
+    display: grid;
+    grid-template-columns: 340px minmax(0, 1fr);
+    gap: 32px;
+    align-items: end;
+    margin-bottom: 22px;
+  }
+
+  h1 {
+    margin: 0 0 4px;
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    font-size: 34px;
+    font-weight: 500;
+    letter-spacing: -0.035em;
+    line-height: 1;
+  }
+
+  .sub {
+    margin: 0;
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  .top-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 9px 0 0;
+    font-size: 11px;
+  }
+
+  .top-links a {
+    color: var(--muted);
+    text-decoration: none;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 1px;
+  }
+
+  .top-links a:hover {
+    color: var(--ink);
+    border-color: var(--ink);
+  }
+
+  main {
+    display: grid;
+    grid-template-columns: 340px minmax(0, 1fr);
+    gap: 32px;
+    align-items: start;
+  }
+
+  aside {
+    position: sticky;
+    top: 20px;
+    display: grid;
+    gap: 14px;
+  }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px;
+  }
+
+  .panel-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .eyebrow {
+    color: var(--muted);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .panel-title {
+    font-size: 15px;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+  }
+
+  button {
+    font: inherit;
+    color: inherit;
+  }
+
+  .reset {
+    border: 0;
+    background: transparent;
+    color: var(--muted);
+    font-size: 11px;
+    cursor: pointer;
+    padding: 2px 0;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .reset:hover { color: var(--ink); }
+
+  .matrix {
+    display: grid;
+    grid-template-columns: 24px repeat(8, 1fr);
+    gap: 4px;
+    user-select: none;
+  }
+
+  .axis {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    font-size: 10px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .axis.row-axis {
+    justify-content: flex-end;
+    padding-right: 3px;
+  }
+
+  .cell {
+    position: relative;
+    height: 34px;
+    border: 0;
+    border-radius: 4px;
+    padding: 0;
+    font-size: 10px;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+  }
+
+  .cell:hover:not(:disabled) { transform: scale(1.06); }
+
+  .cell:disabled {
+    cursor: default;
+    opacity: 0.45;
+  }
+
+  .cell.selected {
+    outline: 2px solid var(--ink);
+    outline-offset: 1px;
+    z-index: 1;
+  }
+
+  .matrix.shape-mode .cell:not(.selected) { opacity: 0.24; }
+  .matrix.shape-mode .cell.selected { opacity: 1; }
+
+  .matrix-caption {
+    margin-top: 9px;
+    color: var(--muted);
+    font-size: 11px;
+  }
+
+  .stat {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 11px;
+  }
+
+  .stat strong { color: var(--ink); font-weight: 650; }
+
+  #search {
+    width: 100%;
+    border: 0;
+    border-bottom: 1px solid var(--line);
+    background: transparent;
+    color: var(--ink);
+    padding: 7px 0 9px;
+    font: inherit;
+    font-size: 16px;
+    outline: none;
+  }
+
+  #search:focus { border-bottom-color: var(--accent); }
+  #search::placeholder { color: #aaa397; }
+
+  .hint {
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: 11px;
+  }
+
+  .hint code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 10px;
+    background: #ece8dd;
+    border-radius: 3px;
+    padding: 1px 4px;
+  }
+
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 14px;
+  }
+
+  .chip {
+    border: 1px solid var(--line);
+    background: transparent;
+    border-radius: 999px;
+    padding: 4px 9px;
+    color: var(--muted);
+    font-size: 11px;
+    cursor: pointer;
+  }
+
+  .chip:hover { border-color: #b9b09c; color: var(--ink); }
+
+  .chip.active {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--bg);
+  }
+
+  .check {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-top: 14px;
+    color: var(--muted);
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  .check input { accent-color: var(--accent); }
+
+  .year-panel {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--panel);
+    padding: 10px 12px;
+    margin: 0;
+  }
+
+  .year-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .year-readout {
+    color: var(--muted);
+    font-size: 10px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .year-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 140px;
+    gap: 14px;
+    align-items: center;
+    margin-top: 7px;
+  }
+
+  .year-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 32px;
+    min-width: 0;
+  }
+
+  .year-bar {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 2px;
+    border: 0;
+    border-radius: 2px 2px 0 0;
+    background: #d8d2c3;
+    cursor: pointer;
+    padding: 0;
+  }
+
+  .year-bar.in { background: var(--accent); }
+  .year-bar:hover { background: var(--ink); }
+
+  .year-sliders {
+    display: grid;
+    grid-template-columns: 26px minmax(0, 1fr);
+    gap: 1px 6px;
+    align-items: center;
+  }
+
+  .year-sliders label {
+    color: var(--muted);
+    font-size: 10px;
+  }
+
+  .year-sliders input[type="range"] {
+    width: 100%;
+    height: 14px;
+    margin: 0;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+
+  .parts-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 12px;
+    min-width: 0;
+  }
+
+  .parts-label {
+    flex: 0 0 auto;
+    color: var(--muted);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .parts {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 5px;
+    overflow-x: auto;
+    padding-bottom: 3px;
+    min-width: 0;
+    scrollbar-width: thin;
+  }
+
+  .part {
+    flex: 0 0 auto;
+    border: 1px solid var(--line);
+    background: transparent;
+    border-radius: 5px;
+    padding: 3px 6px;
+    color: var(--ink);
+    font-size: 11px;
+    cursor: pointer;
+  }
+
+  .part:hover { border-color: #b9b09c; }
+
+  .part .n {
+    margin-left: 4px;
+    color: var(--muted);
+    font-size: 9px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .part.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  .part.active .n { color: rgba(255, 255, 255, 0.75); }
+
+  .part-empty {
+    color: var(--muted);
+    font-size: 11px;
+  }
+
+  .active-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0 0 12px;
+  }
+
+  .active-filters[hidden] { display: none; }
+
+  .afilter {
+    border: 1px solid #c9c0aa;
+    background: #efe9db;
+    border-radius: 999px;
+    padding: 3px 8px;
+    color: var(--ink);
+    font-size: 11px;
+    cursor: pointer;
+  }
+
+  .afilter:hover { border-color: var(--ink); }
+
+  .afilter span {
+    margin-left: 3px;
+    color: var(--muted);
+  }
+
+  .results-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 2px 0 12px;
+  }
+
+  .count {
+    color: var(--muted);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .count strong { color: var(--ink); font-weight: 650; }
+
+  select {
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--ink);
+    border-radius: 6px;
+    padding: 4px 7px;
+    font: inherit;
+    font-size: 11px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+  }
+
+  .tile {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    min-height: 108px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 14px 12px 30px;
+    background: var(--tile);
+    border: 1px solid #e2dccd;
+    border-radius: 10px;
+    overflow: hidden;
+    content-visibility: auto;
+    contain-intrinsic-size: auto 112px;
+    transition: border-color 0.15s ease, transform 0.15s ease;
+  }
+
+  .tile:hover {
+    border-color: #b9b09c;
+    transform: translateY(-1px);
+  }
+
+  .mark {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    text-align: center;
+  }
+
+  .word {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    line-height: 1.05;
+  }
+
+  .v0 .word {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.045em;
+  }
+
+  .v1 .word {
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+  }
+
+  .v1 .mark::before {
+    content: "";
+    display: block;
+    width: 7px;
+    height: 7px;
+    margin-bottom: 7px;
+    background: var(--accent);
+  }
+
+  .v2 .word {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    border-bottom: 2px solid var(--accent);
+    padding-bottom: 4px;
+  }
+
+  .v3 .stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 20px;
+    font-weight: 650;
+    letter-spacing: -0.035em;
+    line-height: 0.88;
+  }
+
+  .v4 .mono {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 29px;
+    height: 29px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+  }
+
+  .v4 .word {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  .v5 .mark {
+    width: auto;
+    max-width: 100%;
+    border: 1.5px solid var(--accent);
+    border-radius: 999px;
+    padding: 8px 13px;
+  }
+
+  .v5 .word {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .v6 .two {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    max-width: 100%;
+    font-size: 18px;
+    font-weight: 650;
+    letter-spacing: -0.045em;
+    line-height: 1.05;
+    overflow-wrap: anywhere;
+  }
+
+  .v6 .two span:first-child { color: var(--accent); }
+
+  .v7 .word {
+    border-top: 1px solid var(--accent);
+    border-bottom: 1px solid var(--accent);
+    padding: 5px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+  }
+
+  .v8 .mark {
+    flex-direction: row;
+    gap: 8px;
+  }
+
+  .v8 .mono {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+  }
+
+  .v8 .word {
+    text-align: left;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  .v9 .mark {
+    align-items: flex-start;
+    width: auto;
+    max-width: 100%;
+    border-left: 3px solid var(--accent);
+    padding-left: 10px;
+    text-align: left;
+  }
+
+  .v9 .word {
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+  }
+
+  .badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    padding: 2px 6px;
+    border-radius: 999px;
+    background: hsl(var(--sh) 58% var(--sb));
+    color: hsl(var(--sh) 64% var(--st));
+    box-shadow: inset 0 0 0 1px hsl(var(--sh) 38% var(--bd));
+    font-size: 10px;
+    font-weight: 650;
+    letter-spacing: 0.02em;
+    line-height: 1;
+  }
+
+  .foot {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 8px;
+    height: 13px;
+    color: var(--muted);
+    font-size: 10px;
+    text-align: center;
+  }
+
+  .foot span {
+    position: absolute;
+    inset: 0;
+    transition: opacity 0.15s ease;
+  }
+
+  .split { opacity: 0; }
+  .tile:hover .meta { opacity: 0; }
+  .tile:hover .split { opacity: 1; }
+
+  .empty {
+    grid-column: 1 / -1;
+    padding: 48px 20px;
+    border: 1px dashed var(--line);
+    border-radius: 10px;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  .empty button {
+    border: 0;
+    background: transparent;
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+    font-size: 12px;
+  }
+
+  footer {
+    margin-top: 40px;
+    padding-top: 12px;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 11px;
+  }
+
+  @media (max-width: 900px) {
+    body { padding: 24px 16px 48px; }
+    header.top { grid-template-columns: 1fr; gap: 12px; }
+    h1 { font-size: 36px; }
+    main { grid-template-columns: 1fr; gap: 22px; }
+    aside { position: static; max-height: none; overflow: visible; padding-right: 0; }
+    .matrix { max-width: 430px; }
+  }
+
+  @media (max-width: 520px) {
+    h1 { font-size: 30px; }
+    .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .tile { aspect-ratio: 1 / 1; min-height: 120px; }
+    .cell { height: 30px; }
+    .results-head { align-items: flex-end; }
+    .year-body { grid-template-columns: 1fr; gap: 6px; }
+    .year-chart { height: 26px; }
+    .parts-row { align-items: flex-start; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="title-block">
+    <h1>Compound Matrix</h1>
+    <p class="sub">Two-word brand names by part length.</p>
+    <p class="top-links"><a href="https://justinslud.com">justinslud.com</a><a href="https://justinslud.com/notes/compound-matrix">Read the blog post</a></p>
+  </div>
+  <div class="year-panel">
+    <div class="year-head">
+      <span class="eyebrow">Years</span>
+      <span id="yearReadout" class="year-readout"></span>
+    </div>
+    <div class="year-body">
+      <div id="yearChart" class="year-chart" role="group" aria-label="Year histogram"></div>
+      <div class="year-sliders">
+        <label for="yearFromRange">From</label>
+        <input id="yearFromRange" type="range" step="1">
+        <label for="yearToRange">To</label>
+        <input id="yearToRange" type="range" step="1">
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <aside>
+    <section class="panel">
+      <div class="panel-head">
+        <label class="eyebrow" for="search">Search</label>
+        <button class="reset" id="reset">Reset</button>
+      </div>
+      <input id="search" type="text" placeholder="face*  *base  4  4+5" autocomplete="off" spellcheck="false">
+      <div class="hint"><code>*</code> any · <code>?</code> one letter · <code>4</code> any part · <code>4+5</code> shape</div>
+      <div class="chips" id="chips"></div>
+      <label class="check"><input type="checkbox" id="compounds" checked> Compounds only</label>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="eyebrow">Shape</div>
+          <div class="panel-title">Part lengths</div>
+        </div>
+      </div>
+      <div id="matrix" class="matrix" aria-label="Matrix of first and second part lengths"></div>
+      <div class="matrix-caption">rows = first part · columns = second part</div>
+      <div class="stat" id="stat"></div>
+    </section>
+  </aside>
+
+  <section class="results">
+    <div class="results-head">
+      <div class="count" id="count"></div>
+      <select id="sort" aria-label="Sort">
+        <option value="name">A–Z</option>
+        <option value="year">Oldest</option>
+        <option value="year-desc">Newest</option>
+        <option value="shape">Shape</option>
+      </select>
+    </div>
+    <div id="activeFilters" class="active-filters" hidden></div>
+    <div class="parts-row">
+      <div class="parts-label">Parts</div>
+      <div class="parts" id="parts"></div>
+    </div>
+    <div id="grid" class="grid"></div>
+  </section>
+</main>
+
+<footer>
+  <strong>Build 6</strong> · Demo: <span id="footerCount"></span> names. Generated wordmarks, not real logos. Years approximate.
+</footer>
+
+<script src="brands.js"></script>
+<script>
+  const DATA = window.BRANDS;
+  const CATS = ["Tech", "Consumer", "Finance", "Health", "Media"];
+  const SIZES = [2, 3, 4, 5, 6, 7, 8, 9];
+  const YEAR_MIN = Math.min(...DATA.map((b) => b.year));
+  const YEAR_MAX = Math.max(...DATA.map((b) => b.year));
+  const CAT_COLORS = {
+    Tech: "#3b5bdb",
+    Consumer: "#c05621",
+    Finance: "#2f855a",
+    Health: "#0f766e",
+    Media: "#9c36b5"
+  };
+
+  const state = {
+    q: "",
+    cat: null,
+    compounds: true,
+    cell: null,
+    part: null,
+    yearFrom: YEAR_MIN,
+    yearTo: YEAR_MAX,
+    sort: "name"
+  };
+
+  const $ = (s) => document.querySelector(s);
+  const searchEl = $("#search");
+  const gridEl = $("#grid");
+  const matrixEl = $("#matrix");
+  const chipsEl = $("#chips");
+  const countEl = $("#count");
+  const statEl = $("#stat");
+  const sortEl = $("#sort");
+  const compoundsEl = $("#compounds");
+  const partsEl = $("#parts");
+  const activeFiltersEl = $("#activeFilters");
+  const yearChartEl = $("#yearChart");
+  const yearReadoutEl = $("#yearReadout");
+  const yearFromRangeEl = $("#yearFromRange");
+  const yearToRangeEl = $("#yearToRange");
+
+  function shapeQuery(q) {
+    const s = String(q).trim().toLowerCase();
+    const numeric = s.match(/^(\d+)\s*(?:\+|x|\*|\/|by|plus)\s*(\d+)$/);
+    if (numeric) return [Number(numeric[1]), Number(numeric[2])];
+
+    const words = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9 };
+    const verbal = s.match(/^(one|two|three|four|five|six|seven|eight|nine)\s+(?:plus|by)\s+(one|two|three|four|five|six|seven|eight|nine)$/);
+    return verbal ? [words[verbal[1]], words[verbal[2]]] : null;
+  }
+
+  function lengthQuery(q) {
+    const s = String(q).trim().toLowerCase();
+    if (/^[2-9]$/.test(s)) return Number(s);
+    const words = { two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9 };
+    return words[s] || null;
+  }
+
+  function matchName(b, q) {
+    if (!q) return true;
+    const query = q.trim().toLowerCase();
+    if (shapeQuery(query)) return true;
+    const fields = [b.name, b.p1, b.p2].map((s) => s.toLowerCase());
+
+    if (!query.includes("*") && !query.includes("?")) {
+      return fields.some((s) => s.includes(query));
+    }
+
+    const escaped = query.replace(/[.+^${}()|[\]\\]/g, "\\$&");
+    const rx = new RegExp("^" + escaped.replace(/\*/g, ".*").replace(/\?/g, ".") + "$");
+    return fields.some((s) => rx.test(s));
+  }
+
+  function baseFiltered(includePart = true, includeYear = true) {
+    const sq = shapeQuery(state.q);
+    const lq = lengthQuery(state.q);
+    return DATA.filter((b) => {
+      if (state.cat && b.cat !== state.cat) return false;
+      if (state.compounds && b.morph !== "compound") return false;
+      if (includeYear && b.year < state.yearFrom) return false;
+      if (includeYear && b.year > state.yearTo) return false;
+      if (includePart && state.part) {
+        const p = state.part.toLowerCase();
+        if (b.p1.toLowerCase() !== p && b.p2.toLowerCase() !== p) return false;
+      }
+      if (lq && b.p1.length !== lq && b.p2.length !== lq) return false;
+      if (!sq && !lq && !matchName(b, state.q)) return false;
+      return true;
+    });
+  }
+
+  function sortArr(arr) {
+    const a = arr.slice();
+    if (state.sort === "year") {
+      a.sort((x, y) => x.year - y.year || x.name.localeCompare(y.name));
+    } else if (state.sort === "year-desc") {
+      a.sort((x, y) => y.year - x.year || x.name.localeCompare(y.name));
+    } else if (state.sort === "shape") {
+      a.sort((x, y) => x.p1.length - y.p1.length || x.p2.length - y.p2.length || x.name.localeCompare(y.name));
+    } else {
+      a.sort((x, y) => x.name.localeCompare(y.name));
+    }
+    return a;
+  }
+
+  function visible() {
+    let arr = baseFiltered();
+    if (state.cell) {
+      arr = arr.filter((b) => b.p1.length === state.cell[0] && b.p2.length === state.cell[1]);
+    }
+    return sortArr(arr);
+  }
+
+  function hash(s) {
+    let h = 0;
+    for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+    return h;
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, (c) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;"
+    }[c]));
+  }
+
+  function renderChips() {
+    chipsEl.innerHTML = ["All", ...CATS].map((c) => {
+      const active = c === "All" ? !state.cat : state.cat === c;
+      return `<button class="chip${active ? " active" : ""}" data-cat="${c}">${c}</button>`;
+    }).join("");
+  }
+
+  function renderParts() {
+    const arr = baseFiltered(false);
+    const counts = {};
+
+    arr.forEach((b) => {
+      [b.p1, b.p2].forEach((p) => {
+        const key = p.toLowerCase();
+        if (!counts[key]) counts[key] = { key, label: p, n: 0 };
+        counts[key].n += 1;
+      });
+    });
+
+    let list = Object.values(counts).sort((a, b) => b.n - a.n || a.label.localeCompare(b.label));
+    list = list.slice(0, 28);
+
+    if (state.part) {
+      const key = state.part.toLowerCase();
+      const active = counts[key];
+      if (active && !list.some((x) => x.key === key)) list.unshift(active);
+    }
+
+    partsEl.innerHTML = list.length
+      ? list.map((x) => {
+          const active = state.part && state.part.toLowerCase() === x.key;
+          return `<button class="part${active ? " active" : ""}" data-part="${escapeHtml(x.label)}">${escapeHtml(x.label)}<span class="n">${x.n}</span></button>`;
+        }).join("")
+      : `<div class="part-empty">No parts.</div>`;
+  }
+
+  function renderActiveFilters() {
+    const chips = [];
+
+    if (state.cell) {
+      chips.push(`<button class="afilter" data-clear="cell" aria-label="Clear shape filter">Shape ${state.cell[0]}+${state.cell[1]} <span>×</span></button>`);
+    }
+
+    if (state.part) {
+      chips.push(`<button class="afilter" data-clear="part" aria-label="Clear part filter">Part ${escapeHtml(state.part)} <span>×</span></button>`);
+    }
+
+    if (state.yearFrom > YEAR_MIN || state.yearTo < YEAR_MAX) {
+      chips.push(`<button class="afilter" data-clear="year" aria-label="Clear year filter">Years ${state.yearFrom}–${state.yearTo} <span>×</span></button>`);
+    }
+
+    if (state.cat) {
+      chips.push(`<button class="afilter" data-clear="cat" aria-label="Clear category filter">${state.cat} <span>×</span></button>`);
+    }
+
+    activeFiltersEl.innerHTML = chips.join("");
+    activeFiltersEl.hidden = chips.length === 0;
+  }
+
+  function renderMatrix() {
+    const arr = baseFiltered();
+    const counts = {};
+    let max = 0;
+
+    arr.forEach((b) => {
+      const k = b.p1.length + "," + b.p2.length;
+      counts[k] = (counts[k] || 0) + 1;
+      if (counts[k] > max) max = counts[k];
+    });
+
+    let html = `<div class="axis"></div>`;
+    SIZES.forEach((c) => { html += `<div class="axis">${c}</div>`; });
+
+    SIZES.forEach((r) => {
+      html += `<div class="axis row-axis">${r}</div>`;
+      SIZES.forEach((c) => {
+        const n = counts[r + "," + c] || 0;
+        const ratio = max ? n / max : 0;
+        const light = Math.round(96 - 48 * Math.sqrt(ratio));
+        const dark = ratio > 0.55;
+        const selected = state.cell && state.cell[0] === r && state.cell[1] === c;
+        html += `<button
+          class="cell${selected ? " selected" : ""}"
+          data-r="${r}" data-c="${c}"
+          ${n ? "" : "disabled"}
+          style="background:hsl(174 55% ${n ? light : 96}%);color:${dark ? "#fff" : "#17150f"}"
+          title="${r}+${c}: ${n} name${n === 1 ? "" : "s"}"
+          aria-label="${r} plus ${c}: ${n} names">${n || ""}</button>`;
+      });
+    });
+
+    matrixEl.innerHTML = html;
+    matrixEl.classList.toggle("shape-mode", Boolean(state.cell));
+  }
+
+  function renderYearChart() {
+    const arr = baseFiltered(true, false);
+    const counts = {};
+    const start = Math.floor(YEAR_MIN / 10) * 10;
+    const end = Math.floor(YEAR_MAX / 10) * 10;
+
+    for (let d = start; d <= end; d += 10) counts[d] = 0;
+    arr.forEach((b) => {
+      const d = Math.floor(b.year / 10) * 10;
+      counts[d] = (counts[d] || 0) + 1;
+    });
+
+    const max = Math.max(1, ...Object.values(counts));
+    yearChartEl.innerHTML = Object.entries(counts).map(([decade, n]) => {
+      const d = Number(decade);
+      const inRange = d + 9 >= state.yearFrom && d <= state.yearTo;
+      const height = n ? Math.max(10, Math.round((n / max) * 100)) : 3;
+      const lo = Math.max(d, YEAR_MIN);
+      const hi = Math.min(d + 9, YEAR_MAX);
+      return `<button class="year-bar${inRange ? " in" : ""}" style="height:${height}%" data-decade="${d}" title="${lo}–${hi}: ${n} name${n === 1 ? "" : "s"}" aria-label="Filter ${lo} to ${hi}: ${n} names"></button>`;
+    }).join("");
+
+    yearFromRangeEl.min = YEAR_MIN;
+    yearFromRangeEl.max = YEAR_MAX;
+    yearFromRangeEl.value = state.yearFrom;
+    yearToRangeEl.min = YEAR_MIN;
+    yearToRangeEl.max = YEAR_MAX;
+    yearToRangeEl.value = state.yearTo;
+    yearReadoutEl.textContent = `${state.yearFrom}–${state.yearTo}`;
+  }
+
+  function renderStat() {
+    const arr = baseFiltered();
+    const shapes = new Set(arr.map((b) => b.p1.length + "+" + b.p2.length)).size;
+    statEl.innerHTML = `<strong>${arr.length}</strong> names · ${shapes} shapes`;
+  }
+
+  function renderGrid() {
+    const arr = visible();
+    const total = baseFiltered().length;
+    countEl.innerHTML = `<strong>${arr.length}</strong> shown · ${total} in set`;
+
+    if (!arr.length) {
+      gridEl.innerHTML = `<div class="empty">No names here. <button id="emptyReset">Reset filters</button></div>`;
+      const er = $("#emptyReset");
+      if (er) er.addEventListener("click", reset);
+      return;
+    }
+
+    gridEl.innerHTML = arr.map((b) => {
+      const l1 = b.p1.length;
+      const l2 = b.p2.length;
+      const v = hash(b.name) % 10;
+      const accent = CAT_COLORS[b.cat] || "#0f766e";
+      const word = escapeHtml(b.name);
+      let mark;
+
+      if (v === 3) {
+        mark = `<div class="stack"><span>${escapeHtml(b.p1)}</span><span>${escapeHtml(b.p2)}</span></div>`;
+      } else if (v === 6) {
+        mark = `<div class="two"><span>${escapeHtml(b.p1)}</span><span>${escapeHtml(b.p2)}</span></div>`;
+      } else if (v === 4 || v === 8) {
+        mark = `<div class="mono">${escapeHtml((b.p1[0] + b.p2[0]).toUpperCase())}</div><div class="word">${word}</div>`;
+      } else {
+        mark = `<div class="word">${word}</div>`;
+      }
+
+      const note = b.note ? " · " + escapeHtml(b.note) : "";
+      const shapeHue = 196 + (l2 - 2) * 15;
+      const shapeBg = 92 - (l1 - 2) * 2.4;
+      const shapeFg = 38 - (l1 - 2) * 0.7;
+      const shapeBd = shapeBg - 12;
+      return `<article class="tile v${v}" style="--accent:${accent}" title="${escapeHtml(b.name)} — ${escapeHtml(b.p1)} + ${escapeHtml(b.p2)} (${l1}+${l2})${note}">
+        <span class="badge" style="--sh:${shapeHue};--sb:${shapeBg}%;--st:${shapeFg}%;--bd:${shapeBd}%">${l1}+${l2}</span>
+        <div class="mark">${mark}</div>
+        <div class="foot">
+          <span class="meta">${b.year} · ${b.cat}</span>
+          <span class="split">${escapeHtml(b.p1)} / ${escapeHtml(b.p2)} · ${l1}+${l2}</span>
+        </div>
+      </article>`;
+    }).join("");
+  }
+
+  function render() {
+    renderChips();
+    renderParts();
+    renderMatrix();
+    renderYearChart();
+    renderStat();
+    renderActiveFilters();
+    renderGrid();
+  }
+
+  function reset() {
+    state.q = "";
+    state.cat = null;
+    state.compounds = true;
+    state.cell = null;
+    state.part = null;
+    state.yearFrom = YEAR_MIN;
+    state.yearTo = YEAR_MAX;
+    state.sort = "name";
+    searchEl.value = "";
+    compoundsEl.checked = true;
+    sortEl.value = "name";
+    render();
+  }
+
+  searchEl.addEventListener("input", (e) => {
+    state.q = e.target.value;
+    state.cell = shapeQuery(state.q);
+    render();
+  });
+
+  matrixEl.addEventListener("click", (e) => {
+    const btn = e.target.closest(".cell");
+    if (!btn) return;
+    const r = Number(btn.dataset.r);
+    const c = Number(btn.dataset.c);
+    if (state.cell && state.cell[0] === r && state.cell[1] === c) {
+      state.cell = null;
+    } else {
+      state.cell = [r, c];
+    }
+    state.q = "";
+    searchEl.value = "";
+    render();
+  });
+
+  chipsEl.addEventListener("click", (e) => {
+    const btn = e.target.closest(".chip");
+    if (!btn) return;
+    const cat = btn.dataset.cat;
+    state.cat = cat === "All" ? null : cat;
+    render();
+  });
+
+  partsEl.addEventListener("click", (e) => {
+    const btn = e.target.closest(".part");
+    if (!btn) return;
+    const part = btn.dataset.part;
+    state.part = state.part && state.part.toLowerCase() === part.toLowerCase() ? null : part;
+    render();
+  });
+
+  activeFiltersEl.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-clear]");
+    if (!btn) return;
+    const kind = btn.dataset.clear;
+
+    if (kind === "cell") {
+      state.cell = null;
+      if (shapeQuery(state.q)) {
+        state.q = "";
+        searchEl.value = "";
+      }
+    } else if (kind === "part") {
+      state.part = null;
+    } else if (kind === "year") {
+      state.yearFrom = YEAR_MIN;
+      state.yearTo = YEAR_MAX;
+    } else if (kind === "cat") {
+      state.cat = null;
+    }
+
+    render();
+  });
+
+  yearFromRangeEl.addEventListener("input", (e) => {
+    state.yearFrom = Number(e.target.value);
+    if (state.yearFrom > state.yearTo) state.yearTo = state.yearFrom;
+    render();
+  });
+
+  yearToRangeEl.addEventListener("input", (e) => {
+    state.yearTo = Number(e.target.value);
+    if (state.yearTo < state.yearFrom) state.yearFrom = state.yearTo;
+    render();
+  });
+
+  yearChartEl.addEventListener("click", (e) => {
+    const btn = e.target.closest(".year-bar");
+    if (!btn) return;
+    const d = Number(btn.dataset.decade);
+    state.yearFrom = Math.max(d, YEAR_MIN);
+    state.yearTo = Math.min(d + 9, YEAR_MAX);
+    render();
+  });
+
+  compoundsEl.addEventListener("change", (e) => {
+    state.compounds = e.target.checked;
+    render();
+  });
+
+  sortEl.addEventListener("change", (e) => {
+    state.sort = e.target.value;
+    render();
+  });
+
+  $("#reset").addEventListener("click", reset);
+
+  $("#footerCount").textContent = DATA.length;
+  render();
+</script>
+</body>
+</html>
