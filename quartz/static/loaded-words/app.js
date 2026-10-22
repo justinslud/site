@@ -28,6 +28,7 @@
     showRisque: false,
     dictQuery: "",
     dictContexts: new Set(),
+    overlapContexts: new Set(),
     comboFilter: [],
     sort: "contexts",
     loadedOnly: true,
@@ -438,7 +439,7 @@
           <div class="card-sub">
             <span>${ctxs.length} context${ctxs.length === 1 ? "" : "s"}</span>
             <span>·</span>
-            <span>freq ${Number(entry.f).toFixed(2)} (${frequencyLabel(Number(entry.f))})</span>
+            <span><span class="freq-label">FREQ</span> ${Number(entry.f).toFixed(2)} (${frequencyLabel(Number(entry.f))})</span>
             ${adult ? '<span class="source-tag">18+</span>' : ""}
           </div>
         </div>
@@ -691,7 +692,6 @@
   const loadMore = $("#loadMore");
   const fuzzyBox = $("#fuzzyBox");
   const contextFilters = $("#contextFilters");
-  const summaryGrid = $("#summaryGrid");
 
   function levenshtein(a, b) {
     if (a === b) return 0;
@@ -799,30 +799,8 @@
           <span class="word-name">${markQuery(entry.w)}</span>
           <span class="word-sub"><span class="mini-chips">${ctxs.map((id) => ctxChip(id)).join("")}</span></span>
         </span>
-        <span class="word-freq">${ctxs.length} ctx<br>${Number(entry.f).toFixed(1)}</span>
+        <span class="word-freq"><span class="freq-label">FREQ</span>${Number(entry.f).toFixed(1)}</span>
       </button>`;
-  }
-
-  function renderSummary(filtered) {
-    const loaded = entries.filter(isLoaded);
-    const topLoaded = loaded.slice().sort((a, b) => visibleContexts(b).length - visibleContexts(a).length || b.f - a.f)[0];
-    const topCommon = loaded.slice().sort((a, b) => b.f - a.f || visibleContexts(b).length - visibleContexts(a).length)[0];
-    summaryGrid.innerHTML = `
-      <div class="summary-card">
-        <div class="label">Showing</div>
-        <div class="value">${filtered.length.toLocaleString()}</div>
-        <div class="sub">of ${ALL_COUNT.toLocaleString()} words</div>
-      </div>
-      <div class="summary-card">
-        <div class="label">Loaded words</div>
-        <div class="value">${loaded.length.toLocaleString()}</div>
-        <div class="sub">${state.showRisque ? "all contexts visible" : "non-risqué contexts"}</div>
-      </div>
-      <div class="summary-card">
-        <div class="label">${topLoaded && visibleContexts(topLoaded).length === visibleContexts(topCommon || topLoaded).length ? "Most loaded & common" : "Most loaded"}</div>
-        <div class="value">${esc((topLoaded && topLoaded.w) || "—")}</div>
-        <div class="sub">${topLoaded ? `${visibleContexts(topLoaded).length} contexts · ${Number(topLoaded.f).toFixed(2)} freq` : ""}</div>
-      </div>`;
   }
 
   function renderDictionary() {
@@ -860,8 +838,6 @@
 
     const shown = filtered.slice(0, state.limit);
     dictCount.textContent = `${filtered.length.toLocaleString()} word${filtered.length === 1 ? "" : "s"}${state.dictQuery ? ` for “${state.dictQuery}”` : ""}`;
-    summaryGrid.innerHTML = "";
-    renderSummary(filtered);
     if (!shown.length) {
       dictList.innerHTML = `<div class="empty-note">No words match these filters. <button class="button quiet" type="button" id="emptyReset">Reset</button></div>`;
       const reset = $("#emptyReset");
@@ -891,53 +867,48 @@
      Overlaps
      --------------------------------------------------------------------- */
 
+  function comboGradient(ctxs) {
+    const colors = ctxs.map((id) => cssColor(id));
+    if (!colors.length) return "transparent";
+    if (colors.length === 1) return colors[0];
+    return `linear-gradient(90deg, ${colors.join(", ")})`;
+  }
+
   function renderOverlaps() {
     const counts = contextCounts();
-    const max = Math.max(1, ...Object.values(counts));
-    $("#contextTotals").innerHTML = CONTEXTS.filter((ctx) => state.showRisque || !ctx.adult)
-      .map(
-        (ctx) => `
-        <button class="context-total" type="button" data-ctx="${ctx.id}">
+    const visibleLoaded = entries.filter(isLoaded);
+    const allActive = state.overlapContexts.size === 0;
+    $("#contextTotals").innerHTML = [
+      `<button class="context-total${allActive ? " is-active" : ""}" type="button" data-overlap-all title="Show every overlap">
+        <span class="context-name">All</span>
+        <span class="context-count">${visibleLoaded.length.toLocaleString()}</span>
+      </button>`,
+      ...CONTEXTS.filter((ctx) => state.showRisque || !ctx.adult).map((ctx) => {
+        const active = state.overlapContexts.has(ctx.id);
+        return `
+        <button class="context-total${active ? " is-active" : ""}" type="button" data-ctx="${ctx.id}" style="--chip-color:${ctx.color}" title="Filter overlaps containing ${esc(ctx.label)}">
           <span class="context-name">${dot(ctx.id)}${esc(ctx.label)}</span>
-          <span class="bar-track"><span class="bar-fill" style="--bar:${ctx.color};width:${Math.max(2, (counts[ctx.id] / max) * 100)}%"></span></span>
           <span class="context-count">${counts[ctx.id].toLocaleString()}</span>
-        </button>`
-      )
-      .join("");
+        </button>`;
+      }),
+    ].join("");
     for (const button of $$("[data-ctx]", $("#contextTotals"))) {
       button.addEventListener("click", () => {
-        state.dictContexts = new Set([button.dataset.ctx]);
-        state.comboFilter = [];
-        state.dictQuery = "";
-        state.limit = 80;
-        dictSearch.value = "";
-        setView("dictionary");
+        const id = button.dataset.ctx;
+        if (state.overlapContexts.has(id)) state.overlapContexts.delete(id);
+        else state.overlapContexts.add(id);
+        renderOverlaps();
+      });
+    }
+    const all = $("[data-overlap-all]", $("#contextTotals"));
+    if (all) {
+      all.addEventListener("click", () => {
+        state.overlapContexts.clear();
+        renderOverlaps();
       });
     }
 
-    const loaded = entries
-      .filter(isLoaded)
-      .sort(
-        (a, b) =>
-          visibleContexts(b).length - visibleContexts(a).length ||
-          b.f - a.f ||
-          a.w.localeCompare(b.w)
-      )
-      .slice(0, 28);
-    $("#mostLoaded").innerHTML = loaded
-      .map(
-        (entry) => `
-        <button class="mini-word" type="button" data-w="${esc(entry.w)}">
-          <span class="mini-chips">${visibleContexts(entry).map((id) => dot(id)).join("")}</span>
-          ${esc(entry.w)}
-          <span class="n">${visibleContexts(entry).length}</span>
-        </button>`
-      )
-      .join("");
-    bindWordElements($("#mostLoaded"));
-
     const combos = new Map();
-    const visibleLoaded = entries.filter(isLoaded);
     for (const entry of visibleLoaded) {
       const ctxs = visibleContexts(entry);
       const n = ctxs.length;
@@ -960,23 +931,32 @@
       }
     }
 
-    const topCombos = Array.from(combos.values())
+    const filteredCombos = Array.from(combos.values()).filter((combo) =>
+      Array.from(state.overlapContexts).every((id) => combo.ctxs.includes(id))
+    );
+    const topCombos = filteredCombos
       .sort((a, b) => b.count - a.count || b.ctxs.length - a.ctxs.length || a.ctxs.join().localeCompare(b.ctxs.join()))
       .slice(0, 20);
     const maxCombo = Math.max(1, ...topCombos.map((c) => c.count));
+    if (!topCombos.length) {
+      $("#overlapBars").innerHTML = `<div class="empty-note">No overlaps contain every selected context. Clear a pill or press All.</div>`;
+      return;
+    }
     $("#overlapBars").innerHTML = topCombos
-      .map(
-        (combo) => `
-        <button class="overlap-row" type="button" data-combo="${esc(combo.ctxs.join("|"))}">
+      .map((combo) => {
+        const label = combo.ctxs.map((id) => ctxLabel(id)).join(" + ");
+        const width = Math.max(3, (combo.count / maxCombo) * 100);
+        return `
+        <button class="overlap-row" type="button" data-combo="${esc(combo.ctxs.join("|"))}" title="${esc(label)} · ${combo.count} shared word${combo.count === 1 ? "" : "s"}">
           <span class="combo-label">${combo.ctxs
             .map((id, index) => `${index ? '<span class="plus">+</span>' : ""}<span class="mini-chip" style="--dot:${cssColor(id)}">${dot(id)}${esc(ctxLabel(id))}</span>`)
             .join("")}</span>
-          <span class="combo-bar">${combo.ctxs
-            .map((id) => `<span class="combo-segment" style="--seg:${cssColor(id)}"></span>`)
-            .join("")}<span class="combo-segment" style="--seg:var(--bg-deep);flex:${Math.max(0.1, 8 - (combo.count / maxCombo) * 8)}"></span></span>
+          <span class="combo-bar" aria-hidden="true">
+            <span class="combo-fill" style="width:${width}%;background:${comboGradient(combo.ctxs)}"></span>
+          </span>
           <span class="combo-count">${combo.count}</span>
-        </button>`
-      )
+        </button>`;
+      })
       .join("");
     for (const button of $$("[data-combo]", $("#overlapBars"))) {
       button.addEventListener("click", () => {
@@ -1020,21 +1000,36 @@
     $("#heroStats").innerHTML = stats.map((s) => `<span>${s}</span>`).join("");
   }
 
+  function syncRisqueControls() {
+    for (const input of $$(".risque-toggle")) {
+      input.checked = state.showRisque;
+      const chip = input.closest(".toggle-chip");
+      if (chip) chip.classList.toggle("is-on", state.showRisque);
+      const label = input.closest("label");
+      const status = label && label.querySelector(".risque-state");
+      if (status) status.textContent = state.showRisque ? "18+ · on" : "18+ · off";
+    }
+  }
+
   function wireEvents() {
     for (const tab of $$(".tab")) {
       tab.addEventListener("click", () => setView(tab.dataset.view));
     }
 
-    $("#showRisque").addEventListener("change", (event) => {
-      state.showRisque = event.target.checked;
-      state.dictContexts.delete("risque");
-      state.comboFilter = [];
-      state.limit = 80;
-      closeCard();
-      if (state.view === "text") renderText();
-      if (state.view === "dictionary") renderDictionary();
-      if (state.view === "overlaps") renderOverlaps();
-    });
+    for (const input of $$(".risque-toggle")) {
+      input.addEventListener("change", (event) => {
+        state.showRisque = event.target.checked;
+        syncRisqueControls();
+        state.dictContexts.delete("risque");
+        state.overlapContexts.delete("risque");
+        state.comboFilter = [];
+        state.limit = 80;
+        closeCard();
+        if (state.view === "text") renderText();
+        if (state.view === "dictionary") renderDictionary();
+        if (state.view === "overlaps") renderOverlaps();
+      });
+    }
 
     textInput.addEventListener("input", () => {
       charCount.textContent = `${textInput.value.length.toLocaleString()} chars`;
@@ -1082,6 +1077,7 @@
       textInput.value = SAMPLES[0].text;
     }
     wireEvents();
+    syncRisqueControls();
     setView("text");
     maybeOpenFromHash();
   }

@@ -21,6 +21,7 @@
       <nav class="toplinks" aria-label="Project links">
         <a href="/">Justin Slud</a>
         <a href="/notes/loaded-words">Blog post</a>
+        <a href="https://github.com/justinslud/site/tree/v5/quartz/static/loaded-words">Code</a>
       </nav>
     </div>
   </header>
@@ -65,9 +66,9 @@
             <span class="counter" id="hitCount">—</span>
           </div>
           <label class="switch hits-switch">
-            <input type="checkbox" id="showRisque" aria-label="Show risqué senses (18+)">
+            <input type="checkbox" class="risque-toggle" aria-label="Show risqué senses (18+)">
             <span class="switch-track" aria-hidden="true"><span class="switch-knob"></span></span>
-            <span class="switch-label">Risqué <small>18+ · off</small></span>
+            <span class="switch-label">Risqué <small class="risque-state">18+ · off</small></span>
           </label>
           <div class="hit-list" id="hitList"></div>
         </section>
@@ -76,15 +77,6 @@
     </section>
 
     <section class="view" id="view-dictionary" hidden>
-      <div class="view-head">
-        <div>
-          <p class="eyebrow">Dictionary</p>
-          <h2>Browse the double lives</h2>
-          <p class="view-lede">Search by word, filter by context, or start from the words with the most overlap.</p>
-        </div>
-        <button class="button quiet" id="resetFilters" type="button">Reset filters</button>
-      </div>
-
       <div class="toolbar">
         <label class="search-wrap">
           <span class="sr-only">Search the dictionary</span>
@@ -94,12 +86,19 @@
           <input type="checkbox" id="loadedOnly" checked>
           <span>2+ visible contexts</span>
         </label>
+        <button class="button quiet toolbar-reset" id="resetFilters" type="button">Reset</button>
       </div>
 
-      <div class="chip-row" id="contextFilters" aria-label="Filter by context"></div>
+      <div class="filter-bar">
+        <div class="chip-row" id="contextFilters" aria-label="Filter by context"></div>
+        <label class="chip toggle-chip">
+          <input type="checkbox" class="risque-toggle" aria-label="Show risqué senses (18+)">
+          <span class="switch-track" aria-hidden="true"><span class="switch-knob"></span></span>
+          <span>Risqué</span>
+          <span class="chip-count">18+</span>
+        </label>
+      </div>
       <div class="fuzzy" id="fuzzyBox" hidden></div>
-
-      <div class="summary-grid" id="summaryGrid"></div>
 
       <div class="list-head">
         <span id="dictCount">—</span>
@@ -116,36 +115,21 @@
     </section>
 
     <section class="view" id="view-overlaps" hidden>
-      <div class="view-head">
-        <div>
-          <p class="eyebrow">Overlaps</p>
-          <h2>Where the meanings pile up</h2>
-          <p class="view-lede">The interesting words are rarely in one room only. These are the contexts that share the most vocabulary.</p>
-        </div>
-      </div>
-
-      <div class="overlap-grid">
-        <section class="panel">
-          <div class="panel-head compact">
-            <h3>Context totals</h3>
-            <span class="counter">visible senses</span>
-          </div>
-          <div class="context-totals" id="contextTotals"></div>
-        </section>
-        <section class="panel">
-          <div class="panel-head compact">
-            <h3>Most loaded</h3>
-            <span class="counter">contexts · commonness</span>
-          </div>
-          <div class="most-loaded" id="mostLoaded"></div>
-        </section>
+      <div class="overlap-meta">
+        <div class="context-totals" id="contextTotals" aria-label="Filter dictionary by context"></div>
+        <label class="chip toggle-chip">
+          <input type="checkbox" class="risque-toggle" aria-label="Show risqué senses (18+)">
+          <span class="switch-track" aria-hidden="true"><span class="switch-knob"></span></span>
+          <span>Risqué</span>
+          <span class="chip-count">18+</span>
+        </label>
       </div>
 
       <section class="panel overlap-panel">
         <div class="panel-head compact">
           <div>
             <h3>Top overlaps</h3>
-            <p class="small-note">Words that carry every context in a combination. Click a bar to see its words.</p>
+            <p class="small-note">Click a context pill to filter the combinations. Click a bar to open its words in the dictionary.</p>
           </div>
           <span class="counter">2–4 contexts</span>
         </div>
