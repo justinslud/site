@@ -11,3 +11,4 @@ Writing, notes, and ongoing lists.
 - [[writing/index|Writing]] — longer pieces.
 - [[notes/index|Notes]] — short observations, snippets, and unfinished ideas.
 - [[lists/index|Lists]] — things to return to and update over time.
+- [[contact|Contact]] — what I'm open to, email, and scheduling a call.
